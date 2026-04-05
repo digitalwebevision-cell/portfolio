@@ -352,6 +352,39 @@ footer { background: #070d19; padding: 3rem 5% 2rem; border-top: 1px solid rgba(
   .nav-links { display: none; }
   .hamburger { display: flex; }
 }
+
+/* ── MODAL COPY ── */
+.modal-overlay {
+  position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center;
+  z-index: 10000;
+}
+.modal-content {
+  background: #fff; border-radius: 12px; padding: 2rem; max-width: 500px; width: 90%;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+}
+.modal-content h3 { margin: 0 0 1rem 0; color: #0d1526; font-size: 1.5rem; }
+.modal-content p { margin: 0 0 1rem 0; color: #6b7280; }
+.modal-content textarea {
+  width: 100%; min-height: 80px; padding: 0.75rem; border: 1px solid #d1d5db;
+  border-radius: 8px; font-family: monospace; font-size: 0.9rem; resize: none;
+  background: #f9fafb; color: #374151; margin-bottom: 1rem;
+}
+.modal-buttons {
+  display: flex; gap: 1rem; justify-content: flex-end;
+}
+.modal-buttons button {
+  padding: 0.75rem 1.5rem; border: none; border-radius: 8px; font-weight: 600;
+  cursor: pointer; transition: background 0.2s;
+}
+.modal-buttons button:first-child {
+  background: var(--blue); color: #fff;
+}
+.modal-buttons button:first-child:hover { background: #1d4ed8; }
+.modal-buttons button:last-child {
+  background: #f3f4f6; color: #374151;
+}
+.modal-buttons button:last-child:hover { background: #e5e7eb; }
 </style>
 </head>
 <body>
@@ -736,10 +769,10 @@ footer { background: #070d19; padding: 3rem 5% 2rem; border-top: 1px solid rgba(
     <h2>Faça uma estimativa visual do seu projeto</h2>
     <p>Esta etapa registra o pedido e prepara um briefing inicial para a conversa comercial.</p>
 
-    <div class="form-group"><label>Nome</label><input type="text" placeholder="Seu nome"></div>
-    <div class="form-group"><label>Email</label><input type="email" placeholder="voce@empresa.com"></div>
-    <div class="form-group"><label>Telefone</label><input type="tel" placeholder="+351 900 000 000"></div>
-    <div class="form-group"><label>Empresa</label><input type="text" placeholder="Nome da empresa"></div>
+    <div class="form-group"><label>Nome</label><input id="orcamento-name" type="text" placeholder="Seu nome"></div>
+    <div class="form-group"><label>Email</label><input id="orcamento-email" type="email" placeholder="voce@empresa.com"></div>
+    <div class="form-group"><label>Telefone</label><input id="orcamento-phone" type="tel" placeholder="+351 900 000 000"></div>
+    <div class="form-group"><label>Empresa</label><input id="orcamento-company" type="text" placeholder="Nome da empresa"></div>
 
     <span class="form-type-label">Tipo de serviço</span>
     <div class="type-chips" id="service-chips">
@@ -758,7 +791,7 @@ footer { background: #070d19; padding: 3rem 5% 2rem; border-top: 1px solid rgba(
       <button class="chip" onclick="toggleBudget(this)">Acima de €30 mil</button>
     </div>
 
-    <button class="btn-submit">Enviar solicitação</button>
+    <button id="submitButton" class="btn-submit" type="button" onclick="sendOrcamento()">Enviar solicitação</button>
   </div>
 </section>
 
@@ -864,6 +897,112 @@ footer { background: #070d19; padding: 3rem 5% 2rem; border-top: 1px solid rgba(
       card.style.display = (cat === 'all' || card.dataset.cat === cat) ? '' : 'none';
     });
   }
-</script>
+
+  function sendOrcamento() {
+    const name = document.getElementById('orcamento-name')?.value.trim() || '';
+    const email = document.getElementById('orcamento-email')?.value.trim() || '';
+    const phone = document.getElementById('orcamento-phone')?.value.trim() || '';
+    const company = document.getElementById('orcamento-company')?.value.trim() || '';
+    const service = Array.from(document.querySelectorAll('#service-chips .chip.active')).map(chip => chip.textContent.trim()).join(', ');
+    const budget = Array.from(document.querySelectorAll('#budget-chips .chip.active')).map(chip => chip.textContent.trim()).join(', ');
+
+    // Validação básica
+    if (!name || !email) {
+      alert('Por favor, preencha pelo menos o nome e email.');
+      return;
+    }
+
+    const subject = encodeURIComponent('Solicitação de orçamento - Digital Web Evision');
+    const body = encodeURIComponent([
+      `Nome: ${name}`,
+      `Email: ${email}`,
+      `Telefone: ${phone}`,
+      `Empresa: ${company}`,
+      `Serviço desejado: ${service}`,
+      `Faixa de investimento: ${budget}`
+    ].join('\n'));
+
+    const mailto = `mailto:digitalwebevision@gmail.com?subject=${subject}&body=${body}`;
+
+    try {
+      // Detectar se é mobile
+      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+
+      window.location.href = mailto;
+
+      // Delay maior para mobile dar tempo do app abrir
+      const delay = isMobile ? 2000 : 1000;
+
+      setTimeout(() => {
+        const submitButton = document.getElementById('submitButton');
+        if (submitButton) {
+          submitButton.textContent = 'Enviado';
+          submitButton.disabled = true;
+          submitButton.style.background = '#10b981'; // Verde de sucesso
+        }
+
+        if (!isMobile) {
+          // Para desktop, mostrar modal com link copiável
+          showCopyModal(mailto);
+        } else {
+          // Para mobile, confirmação simples
+          alert('Email enviado! Verifique seu app de email.');
+        }
+      }, delay);
+    } catch (e) {
+      alert('Erro ao preparar o email. Tente novamente ou entre em contato diretamente: digitalwebevision@gmail.com');
+    }
+  }
+
+  function showCopyModal(mailtoLink) {
+    // Criar modal
+    const modal = document.createElement('div');
+    modal.id = 'copyModal';
+    modal.innerHTML = `
+      <div class="modal-overlay">
+        <div class="modal-content">
+          <h3>Link do Email</h3>
+          <p>Copie este link e cole no seu navegador ou cliente de email:</p>
+          <textarea readonly onclick="this.select()">${mailtoLink}</textarea>
+          <div class="modal-buttons">
+            <button onclick="copyToClipboard('${mailtoLink}')">Copiar Link</button>
+            <button onclick="closeCopyModal()">Fechar</button>
+          </div>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(modal);
+
+    // Focar no textarea
+    setTimeout(() => {
+      const textarea = modal.querySelector('textarea');
+      textarea.select();
+      textarea.focus();
+    }, 100);
+  }
+
+  function copyToClipboard(text) {
+    navigator.clipboard.writeText(text).then(() => {
+      alert('Link copiado para a área de transferência!');
+      closeCopyModal();
+    }).catch(() => {
+      // Fallback para navegadores antigos
+      const textArea = document.createElement('textarea');
+      textArea.value = text;
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textArea);
+      alert('Link copiado para a área de transferência!');
+      closeCopyModal();
+    });
+  }
+
+  function closeCopyModal() {
+    const modal = document.getElementById('copyModal');
+    if (modal) {
+      modal.remove();
+    }
+  }
 </body>
 </html>
