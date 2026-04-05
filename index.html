@@ -736,10 +736,10 @@ footer { background: #070d19; padding: 3rem 5% 2rem; border-top: 1px solid rgba(
     <h2>Faça uma estimativa visual do seu projeto</h2>
     <p>Esta etapa registra o pedido e prepara um briefing inicial para a conversa comercial.</p>
 
-    <div class="form-group"><label>Nome</label><input type="text" placeholder="Seu nome"></div>
-    <div class="form-group"><label>Email</label><input type="email" placeholder="voce@empresa.com"></div>
-    <div class="form-group"><label>Telefone</label><input type="tel" placeholder="+351 900 000 000"></div>
-    <div class="form-group"><label>Empresa</label><input type="text" placeholder="Nome da empresa"></div>
+    <div class="form-group"><label>Nome</label><input id="orcamento-name" type="text" placeholder="Seu nome"></div>
+    <div class="form-group"><label>Email</label><input id="orcamento-email" type="email" placeholder="voce@empresa.com"></div>
+    <div class="form-group"><label>Telefone</label><input id="orcamento-phone" type="tel" placeholder="+351 900 000 000"></div>
+    <div class="form-group"><label>Empresa</label><input id="orcamento-company" type="text" placeholder="Nome da empresa"></div>
 
     <span class="form-type-label">Tipo de serviço</span>
     <div class="type-chips" id="service-chips">
@@ -758,7 +758,7 @@ footer { background: #070d19; padding: 3rem 5% 2rem; border-top: 1px solid rgba(
       <button class="chip" onclick="toggleBudget(this)">Acima de €30 mil</button>
     </div>
 
-    <button class="btn-submit">Enviar solicitação</button>
+    <button id="submitButton" class="btn-submit" type="button" onclick="sendOrcamento()">Enviar solicitação</button>
   </div>
 </section>
 
@@ -863,6 +863,33 @@ footer { background: #070d19; padding: 3rem 5% 2rem; border-top: 1px solid rgba(
     document.querySelectorAll('.port-card').forEach(card => {
       card.style.display = (cat === 'all' || card.dataset.cat === cat) ? '' : 'none';
     });
+  }
+
+  function sendOrcamento() {
+    const name = document.getElementById('orcamento-name')?.value.trim() || '';
+    const email = document.getElementById('orcamento-email')?.value.trim() || '';
+    const phone = document.getElementById('orcamento-phone')?.value.trim() || '';
+    const company = document.getElementById('orcamento-company')?.value.trim() || '';
+    const service = Array.from(document.querySelectorAll('#service-chips .chip.active')).map(chip => chip.textContent.trim()).join(', ');
+    const budget = Array.from(document.querySelectorAll('#budget-chips .chip.active')).map(chip => chip.textContent.trim()).join(', ');
+
+    const subject = encodeURIComponent('Solicitação de orçamento - Digital Web Evision');
+    const body = encodeURIComponent([
+      `Nome: ${name}`,
+      `Email: ${email}`,
+      `Telefone: ${phone}`,
+      `Empresa: ${company}`,
+      `Serviço desejado: ${service}`,
+      `Faixa de investimento: ${budget}`
+    ].join('\n'));
+
+    window.location.href = `mailto:digitalwebevision@gmail.com?subject=${subject}&body=${body}`;
+
+    const submitButton = document.getElementById('submitButton');
+    if (submitButton) {
+      submitButton.textContent = 'Enviado';
+      submitButton.disabled = true;
+    }
   }
 </script>
 </body>
