@@ -352,6 +352,39 @@ footer { background: #070d19; padding: 3rem 5% 2rem; border-top: 1px solid rgba(
   .nav-links { display: none; }
   .hamburger { display: flex; }
 }
+
+/* ── MODAL COPY ── */
+.modal-overlay {
+  position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center;
+  z-index: 10000;
+}
+.modal-content {
+  background: #fff; border-radius: 12px; padding: 2rem; max-width: 500px; width: 90%;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+}
+.modal-content h3 { margin: 0 0 1rem 0; color: #0d1526; font-size: 1.5rem; }
+.modal-content p { margin: 0 0 1rem 0; color: #6b7280; }
+.modal-content textarea {
+  width: 100%; min-height: 80px; padding: 0.75rem; border: 1px solid #d1d5db;
+  border-radius: 8px; font-family: monospace; font-size: 0.9rem; resize: none;
+  background: #f9fafb; color: #374151; margin-bottom: 1rem;
+}
+.modal-buttons {
+  display: flex; gap: 1rem; justify-content: flex-end;
+}
+.modal-buttons button {
+  padding: 0.75rem 1.5rem; border: none; border-radius: 8px; font-weight: 600;
+  cursor: pointer; transition: background 0.2s;
+}
+.modal-buttons button:first-child {
+  background: var(--blue); color: #fff;
+}
+.modal-buttons button:first-child:hover { background: #1d4ed8; }
+.modal-buttons button:last-child {
+  background: #f3f4f6; color: #374151;
+}
+.modal-buttons button:last-child:hover { background: #e5e7eb; }
 </style>
 </head>
 <body>
@@ -909,9 +942,10 @@ footer { background: #070d19; padding: 3rem 5% 2rem; border-top: 1px solid rgba(
         }
 
         if (!isMobile) {
-          alert('Email preparado! Se o cliente de email não abriu automaticamente, copie este link e cole no seu navegador:\n\n' + mailto);
+          // Para desktop, mostrar modal com link copiável
+          showCopyModal(mailto);
         } else {
-          // Para mobile, mostrar confirmação mais simples
+          // Para mobile, confirmação simples
           alert('Email enviado! Verifique seu app de email.');
         }
       }, delay);
@@ -919,6 +953,56 @@ footer { background: #070d19; padding: 3rem 5% 2rem; border-top: 1px solid rgba(
       alert('Erro ao preparar o email. Tente novamente ou entre em contato diretamente: digitalwebevision@gmail.com');
     }
   }
-</script>
+
+  function showCopyModal(mailtoLink) {
+    // Criar modal
+    const modal = document.createElement('div');
+    modal.id = 'copyModal';
+    modal.innerHTML = `
+      <div class="modal-overlay">
+        <div class="modal-content">
+          <h3>Link do Email</h3>
+          <p>Copie este link e cole no seu navegador ou cliente de email:</p>
+          <textarea readonly onclick="this.select()">${mailtoLink}</textarea>
+          <div class="modal-buttons">
+            <button onclick="copyToClipboard('${mailtoLink}')">Copiar Link</button>
+            <button onclick="closeCopyModal()">Fechar</button>
+          </div>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(modal);
+
+    // Focar no textarea
+    setTimeout(() => {
+      const textarea = modal.querySelector('textarea');
+      textarea.select();
+      textarea.focus();
+    }, 100);
+  }
+
+  function copyToClipboard(text) {
+    navigator.clipboard.writeText(text).then(() => {
+      alert('Link copiado para a área de transferência!');
+      closeCopyModal();
+    }).catch(() => {
+      // Fallback para navegadores antigos
+      const textArea = document.createElement('textarea');
+      textArea.value = text;
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textArea);
+      alert('Link copiado para a área de transferência!');
+      closeCopyModal();
+    });
+  }
+
+  function closeCopyModal() {
+    const modal = document.getElementById('copyModal');
+    if (modal) {
+      modal.remove();
+    }
+  }
 </body>
 </html>
