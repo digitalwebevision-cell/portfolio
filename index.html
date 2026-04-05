@@ -873,6 +873,12 @@ footer { background: #070d19; padding: 3rem 5% 2rem; border-top: 1px solid rgba(
     const service = Array.from(document.querySelectorAll('#service-chips .chip.active')).map(chip => chip.textContent.trim()).join(', ');
     const budget = Array.from(document.querySelectorAll('#budget-chips .chip.active')).map(chip => chip.textContent.trim()).join(', ');
 
+    // Validação básica
+    if (!name || !email) {
+      alert('Por favor, preencha pelo menos o nome e email.');
+      return;
+    }
+
     const subject = encodeURIComponent('Solicitação de orçamento - Digital Web Evision');
     const body = encodeURIComponent([
       `Nome: ${name}`,
@@ -883,12 +889,34 @@ footer { background: #070d19; padding: 3rem 5% 2rem; border-top: 1px solid rgba(
       `Faixa de investimento: ${budget}`
     ].join('\n'));
 
-    window.location.href = `mailto:digitalwebevision@gmail.com?subject=${subject}&body=${body}`;
+    const mailto = `mailto:digitalwebevision@gmail.com?subject=${subject}&body=${body}`;
 
-    const submitButton = document.getElementById('submitButton');
-    if (submitButton) {
-      submitButton.textContent = 'Enviado';
-      submitButton.disabled = true;
+    try {
+      // Detectar se é mobile
+      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+
+      window.location.href = mailto;
+
+      // Delay maior para mobile dar tempo do app abrir
+      const delay = isMobile ? 2000 : 1000;
+
+      setTimeout(() => {
+        const submitButton = document.getElementById('submitButton');
+        if (submitButton) {
+          submitButton.textContent = 'Enviado';
+          submitButton.disabled = true;
+          submitButton.style.background = '#10b981'; // Verde de sucesso
+        }
+
+        if (!isMobile) {
+          alert('Email preparado! Se o cliente de email não abriu automaticamente, copie este link e cole no seu navegador:\n\n' + mailto);
+        } else {
+          // Para mobile, mostrar confirmação mais simples
+          alert('Email enviado! Verifique seu app de email.');
+        }
+      }, delay);
+    } catch (e) {
+      alert('Erro ao preparar o email. Tente novamente ou entre em contato diretamente: digitalwebevision@gmail.com');
     }
   }
 </script>
